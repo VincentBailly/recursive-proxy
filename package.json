@@ -1,0 +1,16 @@
+{
+  "name": "recursive-proxy",
+  "version": "1.0.0",
+  "description": "## Description",
+  "main": "index.js",
+  "scripts": {
+    "test": "tap"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/tap": "^15.0.5",
+    "tap": "^15.1.5"
+  }
+}
