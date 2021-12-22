@@ -6,7 +6,6 @@ function recursiveProxy(handler) {
   const newHandler = {
     ...handler,
     apply: (target, thisArg, argumentList) => {
-      debugger
       const newArgList = argumentList.map(a => {
         if (a instanceof Function) {
           return function (...args) {
@@ -45,7 +44,19 @@ function recursiveProxy(handler) {
     },
     set: (target, prop, value) => {
       const unwrapped = value instanceof Object && value.__proxy_target ? value.__proxy_target : value
-      return handler.set ? handler.set(target, prop, unwrapped) : Reflect.set(target, prop, unwrapped)
+      const sanitized = unwrapped instanceof Function ? 
+        function (...args) {
+          return unwrapped(...args.map(arg => {
+            if (arg instanceof Object) {
+              if (!memo.has(arg)) {
+                memo.set(arg, new Proxy(arg, newHandler))
+              }
+              return memo.get(arg)
+            }
+            return arg
+          }))
+        } : unwrapped
+      return handler.set ? handler.set(target, prop, sanitized) : Reflect.set(target, prop, sanitized)
     }
   }
   return newHandler

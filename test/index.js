@@ -133,7 +133,7 @@ tap.test('return values of functions preserve equality when apply is provided', 
   t.end()
 })
 
-tap.only('callback params are proxied', t => {
+tap.test('callback params are proxied', t => {
   const recursiveHandler = recursiveProxy({
     get: (target, prop, receiver) => {
       if (prop === '__is_proxy') {
@@ -159,6 +159,61 @@ tap.only('callback params are proxied', t => {
   a.bb.c((v, b) => { callbackParam2 = v }, 42)
 
   t.equal(callbackParam, callbackParam2, 'the proxying of the callback args concerves equality')
+
+  t.end()
+})
+
+tap.test('convoluted callback params are proxied', t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const a = new Proxy({}, recursiveHandler)
+
+  const callbackArg = { foo: 'bar'}
+  a.b = { c: (callbackSetter) => { callbackSetter(callback => callback(callbackArg, 32)) } }
+
+  let callbackParam = undefined
+  a.b.c((f) => f((v, b) => { callbackParam = v }, 42))
+  
+  t.ok(callbackParam.__is_proxy, 'callback parameters should be proxies')
+  t.equal(callbackParam.foo, 'bar', 'callback parameters should be proxies')
+
+  a.bb = a.b
+  let callbackParam2 = undefined
+  a.bb.c((f) => f((v, b) => { callbackParam2 = v }, 42))
+
+  t.equal(callbackParam, callbackParam2, 'the proxying of the callback args concerves equality')
+
+  t.end()
+})
+
+tap.test('callback params are proxied when callback is set via a setter', t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const a = new Proxy({}, recursiveHandler)
+
+  const callbackArg = { foo: 'bar'}
+  a.b = { c: function () { this.c.callback(callbackArg, 32) } }
+
+  let callbackParam = undefined
+  a.b.c.callback = (v, b) => { callbackParam = v }
+  a.b.c()
+  
+  t.ok(callbackParam.__is_proxy, 'callback parameters should be proxies')
+  t.equal(callbackParam.foo, 'bar', 'callback parameters should be proxies')
 
   t.end()
 })
