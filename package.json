@@ -1,7 +1,7 @@
 {
   "name": "recursive-proxy",
   "version": "1.0.0",
-  "description": "## Description",
+  "description": "Recursively proxy objects linked a given object",
   "main": "index.js",
   "scripts": {
     "test": "tap"
