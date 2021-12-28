@@ -21,10 +21,10 @@ const handler = {
 }
 
 const recursiveHandler = recursiveProxyHandler(handler)
+ 
+const obj = { b: { c: { d: 42 } } }
 
-const a = new Proxy({}, recursiveHandler)
-
-a.b = { c: { d: 42 } }
+const a = new Proxy(obj, recursiveHandler)
 
 const foo = a.b.c.d
 // log: Get property "b"

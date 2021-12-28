@@ -12,9 +12,7 @@ tap.test('README exemple', t => {
 
   const recursiveHandler = recursiveProxy(handler)
 
-  const a = new Proxy({}, recursiveHandler)
-
-  a.b = { c: { d: 42 } }
+  const a = new Proxy({b: { c: { d: 42 } } }, recursiveHandler)
 
   const foo = a.b.c.d
 
