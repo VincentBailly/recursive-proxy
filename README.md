@@ -68,5 +68,5 @@ Progress:
 - proxy values extracted using a callback passed through setPrototypeOf()
 - proxy values extracted from property getters
 - proxy values extracted using a callback passed through property setters
-
+- proxy all values returned by generators
 
