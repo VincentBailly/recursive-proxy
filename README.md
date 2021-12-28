@@ -37,19 +37,36 @@ const foo = a.b.c.d
 
 This library aimes at providing a proxy object which will proxy any object extracted from it by any means.
 
+Another way to expain this the aim of this library.
+
+```
+Mary is the implementer of a JavaScript object "obj"
+Bob wraps "obj" using this library and pass the wrapped object to Paul.
+Paul can do whatever he wants with the object.
+
+Bob has the means to intercept, modify or inspect any values passed from Mary to Paul through "obj".
+
+Of course Mary and Bob can use cryptography to communicate secrets but their cannot hide that they communicate.
+```
+
+A concrete usage of this library is to monitor all the effects that some code has on a given object.
+It can be useful to understand better what a given function does (eg. which properties of the input are read or modified).
+
+This library could also be used to make an object deeply immutable.
+
 Progress:
 - proxy values extracted with get() [Done]
 - proxy values extracted from apply() [Done]
 - proxy values extracted using a callback passed to apply() [Done]
 - proxy values extracted using a callback passed to set() [Done]
+- proxy values extracted from the constructor [Done]
+- proxy values extracted using a callback passed to the constructor [Done]
 
-- proxy values extracted from the constructor
-- proxy values extracted using a callback passed to the constructor
 - proxy values extracted using a callback passed through defineProperty()
 - proxy values extracted from getOwnPropertyDescriptor()
 - proxy values extracted from getPrototypeOf()
 - proxy values extracted using a callback passed through setPrototypeOf()
+- proxy values extracted from property getters
+- proxy values extracted using a callback passed through property setters
 
 
-
-```

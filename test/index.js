@@ -241,3 +241,63 @@ tap.test(`the functions being wrapped don't loose there properties`, t => {
 
   t.end()
 })
+
+tap.test(`value returned by constructor is wrapped`, t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const a = new Proxy({}, recursiveHandler)
+
+  a.b = function() { return { foo: 'bar' } }
+
+  t.equal((new a.b()).foo, 'bar', 'constructor returns expected object')
+  t.ok((new a.b()).__is_proxy, 'constructor returns a proxy')
+
+  t.end()
+})
+
+tap.test(`constructor in input handler is wrapped`, t => {
+  const recursiveHandler = recursiveProxy({
+    construct: (target, argumentList) => {
+      return { foo: 'baz' }
+    }
+  })
+
+  const a = new Proxy({}, recursiveHandler)
+
+  a.b = function() { return { foo: 'bar' } }
+
+  t.equal((new a.b()).foo, 'baz', 'constructor returns the object overriden by the handler given as input')
+
+  t.end()
+})
+
+tap.test(`arguments extracted through a callback passed to constructor are proxied`, t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const a = new Proxy({}, recursiveHandler)
+
+  a.b = function(callback) { callback({ foo: 'bar'}) }
+
+  let constructorArg = undefined
+  new a.b(arg => { constructorArg = arg })
+
+  t.equal(constructorArg.foo, 'bar', 'constructor args are correctly passed')
+  t.ok(constructorArg.__is_proxy, 'constructor args are proxied')
+
+  t.end()
+})
+

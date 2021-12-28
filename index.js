@@ -32,6 +32,11 @@ function recursiveProxy(handler) {
       const value = handler.apply ? handler.apply(target, thisArg, newArgList) : Reflect.apply(target, thisArg, newArgList)
       return sanitizeOutput(value)
     },
+    construct: (target, argumentList) => {
+      const newArgList = argumentList.map(sanitizeInputs)
+      const value = handler.construct ? handler.construct(target, newArgList) : Reflect.construct(target, newArgList)
+      return sanitizeOutput(value)
+    },
     get: (target, prop, receiver) => {
       if (prop === '__proxy_target') { return target }
       const value = handler.get ? handler.get(target, prop, receiver) : Reflect.get(target, prop, receiver)
