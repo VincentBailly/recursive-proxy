@@ -8,9 +8,9 @@ function recursiveProxy(handler) {
   function sanitizeInputs(input) {
     const i = input instanceof Object && input.__proxy_target ? input.__proxy_target : input
     if (i instanceof Function) {
-      return function (...args) {
-        return i(...args.map(sanitizeOutput))
-      }
+      return new Proxy(i, { 
+        apply: (target, thisArg, argumentList) => { Reflect.apply(target, thisArg, argumentList.map(sanitizeOutput)) }
+      })
     }
     return i
   }

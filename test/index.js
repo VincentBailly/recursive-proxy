@@ -217,3 +217,27 @@ tap.test('callback params are proxied when callback is set via a setter', t => {
 
   t.end()
 })
+
+tap.test(`the functions being wrapped don't loose there properties`, t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const a = new Proxy({}, recursiveHandler)
+  // call the callback passing it its own foo property as arg
+  a.b = (cb) => cb(cb.foo)
+
+  let callbackParam = undefined
+  const callback = function (arg) { callbackParam = arg } 
+  callback.foo = 'bar'
+
+  a.b(callback)
+  t.equal(callbackParam, 'bar', `callbacks don't loose there properties`)
+
+  t.end()
+})
