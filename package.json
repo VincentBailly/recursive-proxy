@@ -1,5 +1,5 @@
 {
-  "name": "recursive-proxy",
+  "name": "recursive-proxy-handler",
   "version": "1.0.0",
   "description": "Recursively proxy objects linked a given object",
   "main": "index.js",

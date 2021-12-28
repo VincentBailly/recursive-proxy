@@ -1,14 +1,17 @@
-# recursive-proxy
+# recursive-proxy-handler
 
 ## Description
 
-recursive-proxy helps create a proxy object with attribute getters
-which return a proxy of the object they would normally return.
+recursive-proxy-handler helps create a proxy object with attribute getters
+which return a proxy of the objects they would normally return.
+
+This library simply decorates the given proxy handler so that it is easy to compose
+it with other "proxy-handler enhancers".
 
 ## Usage
 
 ```javascript
-const { recursiveProxy } = require('recursive-proxy')
+const { recursiveProxyHandler } = require('recursive-proxy-handler')
 
 const handler = {
   get: (target, prop, receiver) => {
@@ -17,7 +20,7 @@ const handler = {
   }
 }
 
-const recursiveHandler = recursiveProxy(handler)
+const recursiveHandler = recursiveProxyHandler(handler)
 
 const a = new Proxy({}, recursiveHandler)
 
