@@ -299,3 +299,42 @@ tap.test(`arguments extracted through a callback passed to constructor are proxi
   t.end()
 })
 
+tap.test('iterable are correctly proxied', t => {
+  
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  // We implement our own iterator because array need some extra magic to work with proxies
+  const it = {
+    [Symbol.iterator]: () => {
+      let i = 0
+      return {
+        next: () => {
+          i++
+          if (i === 1) { return { done: false, value: { a: 1 } } }
+          if (i === 2) { return { done: false, value: { b: 'foo' } } }
+          if (i === 3) { return { done: false, value: { c: 42 } } }
+          return { done: true }
+        }
+      }
+    }
+  }
+
+  const a = new Proxy(it, recursiveHandler)
+
+  const extractedValues = []
+  for (const el of a) {
+    extractedValues.push(el)
+    t.ok(el.__is_proxy, `array element ${el} is proxied`) 
+  }
+  t.equal(extractedValues[0].a, 1, 'first array element is correctly proxied')
+  t.equal(extractedValues[1].b, 'foo', 'first array element is correctly proxied')
+  t.equal(extractedValues[2].c, 42, 'first array element is correctly proxied')
+  t.end()
+})

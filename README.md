@@ -53,13 +53,19 @@ It can be useful to understand better what a given function does (eg. which prop
 
 This library could also be used to make an object deeply immutable.
 
-Progress:
-- proxy values extracted with get() [Done]
-- proxy values extracted from apply() [Done]
-- proxy values extracted using a callback passed to apply() [Done]
-- proxy values extracted using a callback passed to set() [Done]
-- proxy values extracted from the constructor [Done]
-- proxy values extracted using a callback passed to the constructor [Done]
+## Progress
+
+### Done
+
+- proxy values extracted with get()
+- proxy values extracted from apply()
+- proxy values extracted using a callback passed to apply()
+- proxy values extracted using a callback passed to set()
+- proxy values extracted from the constructor
+- proxy values extracted using a callback passed to the constructor
+- proxy all values returned by iterables
+
+### TODO
 
 - proxy values extracted using a callback passed through defineProperty()
 - proxy values extracted from getOwnPropertyDescriptor()
@@ -67,8 +73,7 @@ Progress:
 - proxy values extracted using a callback passed through setPrototypeOf()
 - proxy values extracted from property getters
 - proxy values extracted using a callback passed through property setters
-- proxy all values returned by generators
-- proxy all values returned by iterators
 - proxy global object
 - proxy require()
+- proxy value of 'this' in functions
 
