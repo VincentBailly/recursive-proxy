@@ -37,17 +37,16 @@ const foo = a.b.c.d
 
 This library aimes at providing a proxy object which will proxy any object extracted from it by any means.
 
-Another way to expain this the aim of this library.
+Another way to expain this the aim of this library is the following:
 
 ```
 Mary is the implementer of a JavaScript object "obj"
-Bob wraps "obj" using this library and pass the wrapped object to Paul.
+Bob wraps "obj" using this library and passes the wrapped object to Paul.
 Paul can do whatever he wants with the object.
 
 Bob has the means to intercept, modify or inspect any values passed from Mary to Paul through "obj".
-
-Of course Mary and Bob can use cryptography to communicate secrets but their cannot hide that they communicate.
 ```
+This metaphor has its limits (Mary and Paul can use cryptography to avoid the "man in the middle attack" from Bob), but hopefully it helps concey the intent of this library.
 
 A concrete usage of this library is to monitor all the effects that some code has on a given object.
 It can be useful to understand better what a given function does (eg. which properties of the input are read or modified).
@@ -69,4 +68,7 @@ Progress:
 - proxy values extracted from property getters
 - proxy values extracted using a callback passed through property setters
 - proxy all values returned by generators
+- proxy all values returned by iterators
+- proxy global object
+- proxy require()
 
