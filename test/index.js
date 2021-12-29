@@ -365,3 +365,95 @@ tap.test('this arg is proxied', t => {
   t.end()
 })
 
+tap.test('values extracted by a callback set using Object.defineProperty() are proxied', t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const o = {
+    f() {
+      this.callback({ foo: 'bar' })
+    }
+  }
+
+  const a = new Proxy(o, recursiveHandler)
+
+  let callbackParam = undefined
+  // Note that we get an exception if we try to proxy non-configurable and read-only properties
+  // see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/get#invariants
+  Object.defineProperty(a, 'callback', { value: (arg) => { callbackParam = arg }, writable: true })
+  a.f()
+  
+  t.ok(callbackParam.__is_proxy, 'callback parameters should be proxies')
+  t.equal(callbackParam.foo, 'bar', 'callback parameters should be proxies')
+
+  t.end()
+})
+
+tap.test('values extracted by a callback set using Object.defineProperty() are proxied (when handler has a defineProperty callback)', t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    },
+    defineProperty: (target, prop, desc) => {
+      return Reflect.defineProperty(target, prop, desc)
+    }
+  })
+
+  const o = {
+    f() {
+      this.callback({ foo: 'bar' })
+    }
+  }
+
+  const a = new Proxy(o, recursiveHandler)
+
+  let callbackParam = undefined
+  // Note that we get an exception if we try to proxy non-configurable and read-only properties
+  // see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/get#invariants
+  Object.defineProperty(a, 'callback', { value: (arg) => { callbackParam = arg }, writable: true })
+  a.f()
+  
+  t.ok(callbackParam.__is_proxy, 'callback parameters should be proxies')
+  t.equal(callbackParam.foo, 'bar', 'callback parameters should be proxies')
+
+  t.end()
+})
+
+tap.test('values extracted by a callback set using Object.defineProperty() are proxied (when prop has a getter)', t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const o = {
+    f() {
+      this.callback({ foo: 'bar' })
+    }
+  }
+
+  const a = new Proxy(o, recursiveHandler)
+
+  let callbackParam = undefined
+  // Note that we get an exception if we try to proxy non-configurable properties with a getter
+  // see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/get#invariants
+  Object.defineProperty(a, 'callback', { configurable: true, get: () => (arg) => { callbackParam = arg } })
+  a.f()
+  
+  t.ok(callbackParam.__is_proxy, 'callback parameters should be proxies')
+  t.equal(callbackParam.foo, 'bar', 'callback parameters should be proxies')
+
+  t.end()
+})

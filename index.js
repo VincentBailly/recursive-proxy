@@ -45,6 +45,16 @@ function recursiveProxy(handler) {
     set: (target, prop, value) => {
       const sanitized = sanitizeInputs(value)
       return handler.set ? handler.set(target, prop, sanitized) : Reflect.set(target, prop, sanitized)
+    },
+    defineProperty: (target, prop, desc) => {
+      if (desc.value) {
+        desc.value = sanitizeInputs(desc.value)
+      }
+      if (desc.get) {
+        const originalGetter = desc.get
+        desc.get = () => sanitizeInputs(originalGetter())
+      }
+      return handler.defineProperty? handler.defineProperty(target, prop, desc) : Reflect.defineProperty(target, prop, desc)
     }
   }
   return newHandler
