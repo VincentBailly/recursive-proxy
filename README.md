@@ -64,6 +64,7 @@ This library could also be used to make an object deeply immutable.
 - proxy values extracted from the constructor
 - proxy values extracted using a callback passed to the constructor
 - proxy all values returned by iterables
+- proxy value of 'this' in methods
 
 ### TODO
 
@@ -75,5 +76,4 @@ This library could also be used to make an object deeply immutable.
 - proxy values extracted using a callback passed through property setters
 - proxy global object
 - proxy require()
-- proxy value of 'this' in functions
 

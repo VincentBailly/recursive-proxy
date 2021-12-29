@@ -338,3 +338,30 @@ tap.test('iterable are correctly proxied', t => {
   t.equal(extractedValues[2].c, 42, 'first array element is correctly proxied')
   t.end()
 })
+
+tap.test('this arg is proxied', t => {
+  
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const o = {
+    foo: 'bar',
+  }
+  const a = new Proxy(o, recursiveHandler)
+  
+  let thisArg = undefined
+  a.b = function () { thisArg = this }
+  a.b()
+
+  t.equal(thisArg.foo, 'bar', 'this arg is correctly passed')
+  t.ok(thisArg.__is_proxy, 'this arg is proxied')
+
+  t.end()
+})
+
