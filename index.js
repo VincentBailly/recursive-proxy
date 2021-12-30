@@ -71,8 +71,7 @@ function recursiveProxy(handler, targetAccessor) {
         const get = desc.get
         newDesc.get = function () { return sanitizeInputs(get()) }
       }
-      const value = execMethodOnTarget('defineProperty', target, prop, newDesc)
-      return value
+      return execMethodOnTarget('defineProperty', target, prop, newDesc)
     },
     getOwnPropertyDescriptor: (target, prop) => {
       const desc = execMethodOnTarget('getOwnPropertyDescriptor', target, prop)
@@ -97,6 +96,9 @@ function recursiveProxy(handler, targetAccessor) {
     getPrototypeOf: (target) => {
       const proto = execMethodOnTarget('getPrototypeOf', target)
       return sanitizeOutput(proto)
+    },
+    setPrototypeOf: (target, proto) => {
+      return execMethodOnTarget('setPrototypeOf', target, sanitizeInputs(proto))
     }
   }
   return newHandler

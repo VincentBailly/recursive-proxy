@@ -595,3 +595,33 @@ tap.test('values extracted with getPrototypeOf are proxied', t => {
 
   t.end()
 })
+
+tap.test('values extracted by a callback set using setPrototypeOf are proxied', t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const o = {
+    exec() {
+      this.callback({foo: 'bar'})
+    }
+  }
+
+  const a = new Proxy(o, recursiveHandler)
+
+  let callbackParam = undefined
+  Object.setPrototypeOf(a, { callback: a => { callbackParam = a } })
+
+  a.exec()
+  
+  t.ok(callbackParam.__is_proxy, 'callback parameters should be proxies')
+  t.equal(callbackParam.foo, 'bar', 'callback parameters should be proxies')
+
+  t.end()
+})
+
