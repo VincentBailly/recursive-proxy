@@ -66,14 +66,17 @@ This library could also be used to make an object deeply immutable.
 - proxy all values returned by iterables
 - proxy value of 'this' in methods
 - proxy values extracted using a callback passed through defineProperty()
+- proxy values extracted from getOwnPropertyDescriptor()
+- proxy values extracted using a callback passed using the property descriptor setter
+- proxy values extracted from getOwnPropertyDescriptors()
+- proxy values extracted using a callback passed through property setters
 
 ### TODO
 
-- proxy values extracted from getOwnPropertyDescriptor()
 - proxy values extracted from getPrototypeOf()
 - proxy values extracted using a callback passed through setPrototypeOf()
-- proxy values extracted from property getters
-- proxy values extracted using a callback passed through property setters
+- proxy values extracted using the prototype chain
+- proxy values extracted through a callback passed using the prototype chain
 - proxy global object
 - proxy require()
 

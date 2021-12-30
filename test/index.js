@@ -78,9 +78,11 @@ tap.test('return values of functions are also proxied', t => {
   const a = new Proxy({}, recursiveHandler)
 
   a.b = { c: () => ({ foo: 'bar'}) }
+
+  const o = a.b.c()
   
-  t.equal(a.b.c().foo, 'bar', 'objects which are function work')
-  t.ok(a.b.c().__is_proxy, 'objects returned by proxied method are proxied')
+  t.equal(o.foo, 'bar', 'objects which are function work')
+  t.ok(o.__is_proxy, 'objects returned by proxied method are proxied')
 
   t.end()
 })
@@ -201,10 +203,11 @@ tap.test('callback params are proxied when callback is set via a setter', t => {
     }
   })
 
-  const a = new Proxy({}, recursiveHandler)
-
+  const o = {}
   const callbackArg = { foo: 'bar'}
-  a.b = { c: function () { this.c.callback(callbackArg, 32) } }
+  o.b = { c: function () { this.c.callback(callbackArg, 32) } }
+
+  const a = new Proxy(o, recursiveHandler)
 
   let callbackParam = undefined
   a.b.c.callback = (v, b) => { callbackParam = v }
@@ -451,6 +454,121 @@ tap.test('values extracted by a callback set using Object.defineProperty() are p
   // see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/get#invariants
   Object.defineProperty(a, 'callback', { configurable: true, get: () => (arg) => { callbackParam = arg } })
   a.f()
+  
+  t.ok(callbackParam.__is_proxy, 'callback parameters should be proxies')
+  t.equal(callbackParam.foo, 'bar', 'callback parameters should be proxies')
+
+  t.end()
+})
+
+tap.test('values extracted with getOwnPropretyDescriptor are proxied', t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const o = { prop: { foo: 'bar' } }
+  const a = new Proxy(o, recursiveHandler)
+  
+  const p = Object.getOwnPropertyDescriptor(a, 'prop').value
+
+  t.equal(p.foo, 'bar', 'property values are accessible')
+  t.ok(p.__is_proxy, 'property values are proxied')
+
+  t.end()
+})
+
+tap.test('values extracted with getOwnPropretyDescriptors are proxied', t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const o = { prop: { foo: 'bar' } }
+  const a = new Proxy(o, recursiveHandler)
+  
+  const p = Object.getOwnPropertyDescriptors(a)['prop'].value
+
+  t.equal(p.foo, 'bar', 'property values are accessible')
+  t.ok(p.__is_proxy, 'property values are proxied')
+
+  t.end()
+})
+
+tap.test('values extracted with getOwnPropretyDescriptor are proxied (when handler has a property getter trap', t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    },
+    getOwnPropertyDescriptor: (target, prop) => {
+      return Reflect.getOwnPropertyDescriptor(target, prop)
+    }
+  })
+
+  const o = { prop: { foo: 'bar' } }
+  const a = new Proxy(o, recursiveHandler)
+  
+  const p = Object.getOwnPropertyDescriptor(a, 'prop').value
+
+  t.equal(p.foo, 'bar', 'property values are accessible')
+  t.ok(p.__is_proxy, 'property values are proxied')
+
+  t.end()
+})
+
+tap.test('values extracted with getOwnPropretyDescriptor are proxied (when proprety has a getter)', t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const o = { get prop() { return { foo: 'bar' } } }
+  const a = new Proxy(o, recursiveHandler)
+  
+  const p = Object.getOwnPropertyDescriptor(a, 'prop').get()
+
+  t.equal(p.foo, 'bar', 'property values are accessible')
+  t.ok(p.__is_proxy, 'property values are proxied')
+
+  t.end()
+})
+
+tap.only('values extracted by a callback set using the setter of a property descriptor are proxied', t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const o = {
+    set callback(c) {
+      c({foo: 'bar'})
+    }
+  }
+
+  const a = new Proxy(o, recursiveHandler)
+  debugger
+
+  let callbackParam = undefined
+  Object.getOwnPropertyDescriptor(a, 'callback').set(a => { callbackParam = a })
   
   t.ok(callbackParam.__is_proxy, 'callback parameters should be proxies')
   t.equal(callbackParam.foo, 'bar', 'callback parameters should be proxies')

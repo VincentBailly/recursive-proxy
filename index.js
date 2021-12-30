@@ -1,22 +1,34 @@
-exports.recursiveProxy = recursiveProxy
+const isOutputProxy = Symbol('__output_proxy')
+const isInputProxy = Symbol('__input_proxy')
+
+exports.recursiveProxy = (handler) => recursiveProxy(handler, isOutputProxy)
 
 const memo = new Map()
+const memo2 = new Map()
 
-function recursiveProxy(handler) {
+function recursiveProxy(handler, targetAccessor) {
   let newHandler = undefined
 
   function sanitizeInputs(input) {
-    const i = input instanceof Object && input.__proxy_target ? input.__proxy_target : input
-    if (i instanceof Function) {
-      return new Proxy(i, { 
-        apply: (target, thisArg, argumentList) => { Reflect.apply(target, thisArg, argumentList.map(sanitizeOutput)) }
-      })
+    if (! (input instanceof Object)) {
+      return input
     }
-    return i
+    if (input[isInputProxy]) {
+      return input
+    }
+    if (!memo2.has(input)) {
+        memo2.set(input, new Proxy(input, recursiveProxy({ 
+      apply: (target, thisArg, argumentList) => { return Reflect.apply(target, thisArg, argumentList.map(sanitizeOutput)) }
+    }, isInputProxy)))
+    }
+    return memo2.get(input)
   }
 
   function sanitizeOutput(output) {
     if (output instanceof Object) {
+      if (output[isOutputProxy]) {
+        return output
+      }
       if (!memo.has(output)) {
         memo.set(output, new Proxy(output, newHandler))
       }
@@ -38,7 +50,7 @@ function recursiveProxy(handler) {
       return sanitizeOutput(value)
     },
     get: (target, prop, receiver) => {
-      if (prop === '__proxy_target') { return target }
+      if (prop === targetAccessor) { return true }
       const value = handler.get ? handler.get(target, prop, receiver) : Reflect.get(target, prop, receiver)
       return sanitizeOutput(value)
     },
@@ -47,14 +59,36 @@ function recursiveProxy(handler) {
       return handler.set ? handler.set(target, prop, sanitized) : Reflect.set(target, prop, sanitized)
     },
     defineProperty: (target, prop, desc) => {
+      const newDesc = {...desc}
       if (desc.value) {
-        desc.value = sanitizeInputs(desc.value)
+        newDesc.value = sanitizeInputs(desc.value)
       }
       if (desc.get) {
-        const originalGetter = desc.get
-        desc.get = () => sanitizeInputs(originalGetter())
+        // capture getter in closure in case desc is muted later
+        const get = desc.get
+        newDesc.get = function () { return sanitizeInputs(get()) }
       }
-      return handler.defineProperty? handler.defineProperty(target, prop, desc) : Reflect.defineProperty(target, prop, desc)
+      return handler.defineProperty? handler.defineProperty(target, prop, newDesc) : Reflect.defineProperty(target, prop, newDesc)
+    },
+    getOwnPropertyDescriptor: (target, prop) => {
+      const desc = handler.getOwnPropertyDescriptor ? handler.getOwnPropertyDescriptor(target, prop) : Reflect.getOwnPropertyDescriptor(target, prop)
+      if (!desc) {
+        return desc
+      }
+      if (!desc.hasOwnProperty('get') && !desc.hasOwnProperty('set')) {
+        return {...desc, value: sanitizeOutput(desc.value) }
+      }
+      const newDesc = {...desc}
+      if (desc.get) {
+        // capture getter in closure in case desc is muted later
+        const get = desc.get
+        newDesc.get = function () { return sanitizeOutput(get()) }
+      }
+      if (desc.set) {
+        const set = desc.set
+        newDesc.set = function (a) { return set(sanitizeInputs(a)) }
+      }
+      return newDesc
     }
   }
   return newHandler
