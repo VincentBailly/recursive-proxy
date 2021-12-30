@@ -7,6 +7,9 @@ const memo = new Map()
 const memo2 = new Map()
 
 function recursiveProxy(handler, targetAccessor) {
+  function execMethodOnTarget(methodName, ...params) {
+      return handler[methodName] ? handler[methodName](...params) : Reflect[methodName](...params)
+  }
   let newHandler = undefined
 
   function sanitizeInputs(input) {
@@ -41,22 +44,22 @@ function recursiveProxy(handler, targetAccessor) {
     ...handler,
     apply: (target, thisArg, argumentList) => {
       const newArgList = argumentList.map(sanitizeInputs)
-      const value = handler.apply ? handler.apply(target, thisArg, newArgList) : Reflect.apply(target, thisArg, newArgList)
+      const value = execMethodOnTarget('apply', target, thisArg, newArgList)
       return sanitizeOutput(value)
     },
     construct: (target, argumentList) => {
       const newArgList = argumentList.map(sanitizeInputs)
-      const value = handler.construct ? handler.construct(target, newArgList) : Reflect.construct(target, newArgList)
+      const value = execMethodOnTarget('construct', target, newArgList)
       return sanitizeOutput(value)
     },
     get: (target, prop, receiver) => {
       if (prop === targetAccessor) { return true }
-      const value = handler.get ? handler.get(target, prop, receiver) : Reflect.get(target, prop, receiver)
+      const value = execMethodOnTarget('get', target, prop, receiver)
       return sanitizeOutput(value)
     },
     set: (target, prop, value) => {
       const sanitized = sanitizeInputs(value)
-      return handler.set ? handler.set(target, prop, sanitized) : Reflect.set(target, prop, sanitized)
+      return execMethodOnTarget('set', target, prop, sanitized)
     },
     defineProperty: (target, prop, desc) => {
       const newDesc = {...desc}
@@ -68,10 +71,11 @@ function recursiveProxy(handler, targetAccessor) {
         const get = desc.get
         newDesc.get = function () { return sanitizeInputs(get()) }
       }
-      return handler.defineProperty? handler.defineProperty(target, prop, newDesc) : Reflect.defineProperty(target, prop, newDesc)
+      const value = execMethodOnTarget('defineProperty', target, prop, newDesc)
+      return value
     },
     getOwnPropertyDescriptor: (target, prop) => {
-      const desc = handler.getOwnPropertyDescriptor ? handler.getOwnPropertyDescriptor(target, prop) : Reflect.getOwnPropertyDescriptor(target, prop)
+      const desc = execMethodOnTarget('getOwnPropertyDescriptor', target, prop)
       if (!desc) {
         return desc
       }
@@ -89,6 +93,10 @@ function recursiveProxy(handler, targetAccessor) {
         newDesc.set = function (a) { return set(sanitizeInputs(a)) }
       }
       return newDesc
+    },
+    getPrototypeOf: (target) => {
+      const proto = execMethodOnTarget('getPrototypeOf', target)
+      return sanitizeOutput(proto)
     }
   }
   return newHandler

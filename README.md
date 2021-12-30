@@ -70,10 +70,10 @@ This library could also be used to make an object deeply immutable.
 - proxy values extracted using a callback passed using the property descriptor setter
 - proxy values extracted from getOwnPropertyDescriptors()
 - proxy values extracted using a callback passed through property setters
+- proxy values extracted from getPrototypeOf()
 
 ### TODO
 
-- proxy values extracted from getPrototypeOf()
 - proxy values extracted using a callback passed through setPrototypeOf()
 - proxy values extracted using the prototype chain
 - proxy values extracted through a callback passed using the prototype chain

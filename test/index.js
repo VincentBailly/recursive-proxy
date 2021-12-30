@@ -548,7 +548,7 @@ tap.test('values extracted with getOwnPropretyDescriptor are proxied (when propr
   t.end()
 })
 
-tap.only('values extracted by a callback set using the setter of a property descriptor are proxied', t => {
+tap.test('values extracted by a callback set using the setter of a property descriptor are proxied', t => {
   const recursiveHandler = recursiveProxy({
     get: (target, prop, receiver) => {
       if (prop === '__is_proxy') {
@@ -565,13 +565,33 @@ tap.only('values extracted by a callback set using the setter of a property desc
   }
 
   const a = new Proxy(o, recursiveHandler)
-  debugger
 
   let callbackParam = undefined
   Object.getOwnPropertyDescriptor(a, 'callback').set(a => { callbackParam = a })
   
   t.ok(callbackParam.__is_proxy, 'callback parameters should be proxies')
   t.equal(callbackParam.foo, 'bar', 'callback parameters should be proxies')
+
+  t.end()
+})
+
+tap.test('values extracted with getPrototypeOf are proxied', t => {
+  const recursiveHandler = recursiveProxy({
+    get: (target, prop, receiver) => {
+      if (prop === '__is_proxy') {
+        return true
+      }
+      return Reflect.get(target, prop, receiver)
+    }
+  })
+
+  const o = Object.create({ foo: 'bar' })
+  const a = new Proxy(o, recursiveHandler)
+  
+  const p = Object.getPrototypeOf(a)
+
+  t.equal(p.foo, 'bar', 'property values are accessible')
+  t.ok(p.__is_proxy, 'property values are proxied')
 
   t.end()
 })
