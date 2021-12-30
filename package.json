@@ -1,7 +1,8 @@
 {
   "name": "recursive-proxy-handler",
-  "version": "1.0.0",
-  "description": "Recursively proxy objects linked a given object",
+  "version": "1.1.0",
+  "repository": "VincentBailly/recursive-proxy-handler",
+  "description": "Recursively proxy objects values",
   "main": "index.js",
   "scripts": {
     "test": "tap"
